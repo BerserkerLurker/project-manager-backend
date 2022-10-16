@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const User = require("../models/User");
+const validateEmail = require("../utils/validate");
 
 const register = async (req, res) => {
   const user = await User.create({ ...req.body });
@@ -26,12 +27,28 @@ const login = async (req, res) => {
 
   const token = user.createJWT();
 
-  res.status(StatusCodes.OK).json({ user: { name: user.name }, token });
+  res
+    .status(StatusCodes.OK)
+    .json({ user: { email: user.email, name: user.name }, token });
 };
 
-const updateUser = (req, res) => {
-  console.log(req.body);
-  res.status(StatusCodes.OK).send("updateUser");
+const updateUser = async (req, res) => {
+  const { email, name } = req.body;
+  if (!validateEmail(email) || !name.trim()) {
+    throw new Error("Invalid values.");
+  }
+
+  const user = await User.findOne({ _id: req.user.userId });
+  user.email = email;
+  user.name = name;
+  console.log(user)
+  await user.save();
+
+  const token = user.createJWT();
+  console.log(user);
+  res
+    .status(StatusCodes.OK)
+    .send({ user: { email: user.email, name: user.name }, token });
 };
 
 module.exports = { register, login, updateUser };

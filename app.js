@@ -19,13 +19,29 @@ app.get("/", (req, res) => {
 });
 
 // routes
-app.use("/api/v1/auth", authRouter);
+const auth = require("./middleware/authentication");
+// Authentication
+app.use(
+  "/api/v1/auth",
+  function (req, res, next) {
+    if (req.method === "PATCH") {
+      auth(req, res, next);
+    } else {
+      next();
+    }
+  },
+  authRouter
+);
 
 // test
-app.get('/api/v1/test',(req,res)=>{
-  console.log(req.headers['authorization']);
-  res.send('kay')
-})
+let stringify = require("json-stringify-safe");
+
+app.get("/api/v1/test", (req, res) => {
+  console.log(req.headers.authorization);
+  res.send(stringify(req));
+});
+
+
 
 const port = process.env.PORT || 5000;
 
