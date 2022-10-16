@@ -1,6 +1,7 @@
 const dotenv = require("dotenv").config();
 require("dotenv-expand").expand(dotenv);
 const express = require("express");
+require("express-async-errors");
 const morgan = require("morgan");
 const connectDB = require("./db/connect");
 
@@ -11,13 +12,20 @@ app.use(morgan("dev"));
 // routes
 const authRouter = require("./routes/auth");
 
+app.use(express.json());
+
 app.get("/", (req, res) => {
   res.send("Project Manager");
 });
 
-app.use(express.json());
 // routes
 app.use("/api/v1/auth", authRouter);
+
+// test
+app.get('/api/v1/test',(req,res)=>{
+  console.log(req.headers['authorization']);
+  res.send('kay')
+})
 
 const port = process.env.PORT || 5000;
 
