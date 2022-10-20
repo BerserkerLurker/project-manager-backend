@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const User = require("../models/User");
+const { User } = require("../models");
 const validateEmail = require("../utils/validate");
 
 const register = async (req, res) => {
@@ -41,7 +41,6 @@ const updateUser = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
   user.email = email;
   user.name = name;
-  console.log(user)
   await user.save();
 
   const token = user.createJWT();
