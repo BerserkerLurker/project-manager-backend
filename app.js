@@ -12,6 +12,9 @@ app.use(morgan("dev"));
 // routes
 const authRouter = require("./routes/auth");
 
+// error handler
+const errorHandlerMiddleware = require("./middleware/errorHandler");
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -41,7 +44,7 @@ app.get("/api/v1/test", (req, res) => {
   res.send(stringify(req));
 });
 
-
+app.use(errorHandlerMiddleware);
 
 const port = process.env.PORT || 5000;
 
