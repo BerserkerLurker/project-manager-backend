@@ -10,7 +10,7 @@ const auth = async (req, res, next) => {
 
   try {
     const payload = jwt.decode(token, process.env.JWT_SECRET);
-    req.user = { userId: payload.userId };
+    req.user = { userId: payload.userId, isAdmin: payload.isAdmin };
     console.log(payload);
     next();
   } catch (error) {
