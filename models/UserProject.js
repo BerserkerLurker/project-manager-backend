@@ -4,7 +4,7 @@ const UserProjectSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Types.ObjectId,
   },
-  taskId: {
+  projectId: {
     type: mongoose.Types.ObjectId,
   },
   isOwner: {
