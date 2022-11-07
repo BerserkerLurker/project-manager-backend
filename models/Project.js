@@ -16,7 +16,10 @@ const ProjectSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["onTrack", "atRisk", "offTrack"],
+      enum: {
+        values: ["onTrack", "atRisk", "offTrack"],
+        message: "Status should be either onTrack, atRisk or offTrack.",
+      },
     },
     dueDate: {
       type: Date,
