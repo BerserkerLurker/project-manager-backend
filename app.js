@@ -11,6 +11,7 @@ app.use(morgan("dev"));
 
 // routes
 const authRouter = require("./routes/auth");
+const projectsRouter = require("./routes/projects");
 
 // error handler
 const errorHandlerMiddleware = require("./middleware/errorHandler");
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 });
 
 // routes
+// Authentication Middleware
 const auth = require("./middleware/authentication");
 // Authentication
 app.use(
@@ -35,6 +37,9 @@ app.use(
   },
   authRouter
 );
+
+// Projects
+app.use("/api/v1/projects", auth, projectsRouter);
 
 // test
 let stringify = require("json-stringify-safe");
