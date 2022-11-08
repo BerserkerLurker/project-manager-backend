@@ -58,6 +58,10 @@ const createProject = async (req, res) => {
   const { userId, isAdmin } = req.user;
   const { name, description, isDone, status, dueDate } = req.body;
 
+  if (name === "") {
+    throw new BadRequestError("Project name cannot be empty.");
+  }
+
   if (isAdmin) {
     //TODO - Create project and assign participants
   }
