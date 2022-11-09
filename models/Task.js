@@ -5,7 +5,7 @@ const TaskSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Please provide a name."],
-      unique: true,
+      unique: false,
     },
     description: {
       type: String,
@@ -16,11 +16,17 @@ const TaskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["onTrack", "atRisk", "offTrack"],
+      enum: {
+        values: ["onTrack", "atRisk", "offTrack"],
+        message: "Status should be either onTrack, atRisk or offTrack.",
+      },
     },
     priority: {
       type: String,
-      enum: ["low", "medium", "high"],
+      enum: {
+        values: ["low", "medium", "high"],
+        message: "Priority should be either low, medium or high.",
+      },
     },
     dueDate: {
       type: Date,
@@ -30,5 +36,5 @@ const TaskSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
+//NOTE - add projectId???
 module.exports = mongoose.model("Task", TaskSchema);
