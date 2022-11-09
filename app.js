@@ -14,6 +14,7 @@ const authRouter = require("./routes/auth");
 const projectsRouter = require("./routes/projects");
 const rolesRouter = require("./routes/roles");
 const teamsRouter = require("./routes/teams");
+const tasksRouter = require("./routes/tasks");
 
 // error handler
 const errorHandlerMiddleware = require("./middleware/errorHandler");
@@ -48,6 +49,9 @@ app.use("/api/v1/roles", auth, rolesRouter);
 
 // Teams
 app.use("/api/v1/teams", auth, teamsRouter);
+
+// Tasks
+app.use("/api/v1/tasks", auth, tasksRouter);
 
 // test
 let stringify = require("json-stringify-safe");

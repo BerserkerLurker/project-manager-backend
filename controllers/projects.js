@@ -1,7 +1,6 @@
 const { Project, UserProject } = require("../models");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
-const mongoose = require("mongoose");
 
 const getAllProjects = async (req, res) => {
   const { userId, isAdmin } = req.user;
