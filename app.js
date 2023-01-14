@@ -1,12 +1,14 @@
 const dotenv = require("dotenv").config();
 require("dotenv-expand").expand(dotenv);
 const express = require("express");
+const cookieparser = require("cookie-parser");
 require("express-async-errors");
 const morgan = require("morgan");
 const connectDB = require("./db/connect");
 
 // morgan
 const app = express();
+app.use(cookieparser(process.env.SIGNED_COOKIE_SECRET));
 app.use(morgan("dev"));
 
 // routes
@@ -34,7 +36,7 @@ const auth = require("./middleware/authentication");
 app.use(
   "/api/v1/auth",
   function (req, res, next) {
-    if (req.method === "PATCH") {
+    if (req.method === "PATCH" || req.method === "DELETE") {
       auth(req, res, next);
     } else {
       next();
@@ -59,8 +61,15 @@ app.use("/api/v1/tasks", auth, tasksRouter);
 let stringify = require("json-stringify-safe");
 
 app.get("/api/v1/test", (req, res) => {
-  console.log(req.headers.authorization);
-  res.send(stringify(req));
+  // console.log(req.headers.authorization);
+  // res.send(stringify(req));
+  // Cookies that have not been signed
+  // console.log("Cookies: ", req.cookies);
+
+  // Cookies that have been signed
+  // console.log("Signed Cookies: ", req.signedCookies);
+
+  res.send("ok");
 });
 
 app.use(notFoundMiddleware);

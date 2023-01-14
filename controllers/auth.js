@@ -2,11 +2,26 @@ const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, UnauthenticatedError } = require("../errors");
 const { User } = require("../models");
 const validateEmail = require("../utils/validate");
+const jwt = require("jsonwebtoken");
 
 const register = async (req, res) => {
   const user = await User.create({ ...req.body });
-  const token = user.createJWT();
-  res.status(StatusCodes.CREATED).json({ user: { name: user.name }, token });
+  const accessToken = user.createJWT();
+  const refreshToken = user.createRefreshToken();
+
+  res
+    .status(StatusCodes.CREATED)
+    .cookie("jwt", refreshToken, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      signed: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    })
+    .json({
+      user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+      accessToken,
+    });
 };
 
 const login = async (req, res) => {
@@ -26,11 +41,42 @@ const login = async (req, res) => {
     throw new UnauthenticatedError("Invalid Credentials.");
   }
 
-  const token = user.createJWT();
+  const accessToken = user.createJWT();
+  const refreshToken = user.createRefreshToken();
 
   res
     .status(StatusCodes.OK)
-    .json({ user: { email: user.email, name: user.name }, token });
+    .cookie("jwt", refreshToken, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      signed: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    })
+    .json({
+      user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+      accessToken,
+    });
+};
+
+const refresh = async (req, res) => {
+  if (req.signedCookies?.jwt) {
+    const refreshToken = req.signedCookies.jwt;
+    try {
+      const payload = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+      const user = await User.findOne({ _id: payload.userId });
+      const accessToken = user.createJWT();
+
+      res.status(StatusCodes.OK).json({ accessToken });
+    } catch (error) {
+      throw new UnauthenticatedError("Bad Refresh Token.");
+    }
+  } else {
+    throw new UnauthenticatedError("No Refresh Token Was Provided.");
+  }
 };
 
 const updateUser = async (req, res) => {
@@ -44,11 +90,20 @@ const updateUser = async (req, res) => {
   user.name = name;
   await user.save();
 
-  const token = user.createJWT();
+  const accessToken = user.createJWT();
   console.log(user);
-  res
-    .status(StatusCodes.OK)
-    .send({ user: { email: user.email, name: user.name }, token });
+  res.status(StatusCodes.OK).send({
+    user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+    accessToken,
+  });
 };
 
-module.exports = { register, login, updateUser };
+const deleteUser = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  console.log(userId, isAdmin);
+
+  const deletedUser = User.findByIdAndRemove(userId);
+  res.status(StatusCodes.OK).send("Delete user");
+};
+
+module.exports = { register, login, refresh, updateUser, deleteUser };

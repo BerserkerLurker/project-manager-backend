@@ -50,9 +50,25 @@ UserSchema.pre("save", async function () {
 
 UserSchema.methods.createJWT = function () {
   return jwt.sign(
-    { userId: this._id, email: this.email, name: this.name, isAdmin: this.isAdmin },
+    {
+      userId: this._id,
+      email: this.email,
+      name: this.name,
+      isAdmin: this.isAdmin,
+    },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_LIFETIME }
+  );
+};
+
+UserSchema.methods.createRefreshToken = function () {
+  return jwt.sign(
+    {
+      userId: this._id,
+      email: this.email,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_LIFETIME }
   );
 };
 
