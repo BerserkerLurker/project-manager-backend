@@ -5,6 +5,7 @@ const {
   register,
   login,
   refresh,
+  logout,
   updateUser,
   deleteUser,
 } = require("../controllers/auth");
@@ -12,6 +13,7 @@ const {
 router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
+router.post("/logout", logout);
 router.patch("/updateuser", updateUser);
 router.delete("/deleteuser", deleteUser);
 

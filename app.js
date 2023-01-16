@@ -1,6 +1,7 @@
 const dotenv = require("dotenv").config();
 require("dotenv-expand").expand(dotenv);
 const express = require("express");
+const cors = require("cors");
 const cookieparser = require("cookie-parser");
 require("express-async-errors");
 const morgan = require("morgan");
@@ -8,6 +9,12 @@ const connectDB = require("./db/connect");
 
 // morgan
 const app = express();
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 app.use(cookieparser(process.env.SIGNED_COOKIE_SECRET));
 app.use(morgan("dev"));
 

@@ -79,6 +79,18 @@ const refresh = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  res
+    .status(StatusCodes.OK)
+    .clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      signed: true,
+    })
+    .send("Logged out");
+};
+
 const updateUser = async (req, res) => {
   const { email, name } = req.body;
   if (!validateEmail(email) || !name.trim()) {
@@ -106,4 +118,4 @@ const deleteUser = async (req, res) => {
   res.status(StatusCodes.OK).send("Delete user");
 };
 
-module.exports = { register, login, refresh, updateUser, deleteUser };
+module.exports = { register, login, refresh, logout, updateUser, deleteUser };
