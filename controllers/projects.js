@@ -6,8 +6,20 @@ const getAllProjects = async (req, res) => {
   const { userId, isAdmin } = req.user;
   //   console.log(userId, isAdmin);
   if (isAdmin) {
-    const projects = await Project.find();
+    let projects = await Project.find();
     // console.log(projects);
+    projects = projects.map((project) => {
+      return {
+        projectId: project._id,
+        projectName: project.name,
+        description: project.description,
+        isDone: project.isDone,
+        status: project.status,
+        dueDate: project.dueDate,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+      };
+    });
     res.status(StatusCodes.OK).json(projects);
     return;
   }
@@ -50,7 +62,16 @@ const getProject = async (req, res) => {
     throw new NotFoundError(`No project with id: ${projectId}`);
   }
 
-  res.status(StatusCodes.OK).json(project);
+  res.status(StatusCodes.OK).json({
+    projectId: project._id,
+    projectName: project.name,
+    description: project.description,
+    isDone: project.isDone,
+    status: project.status,
+    dueDate: project.dueDate,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  });
 };
 
 const createProject = async (req, res) => {
@@ -80,7 +101,16 @@ const createProject = async (req, res) => {
   });
   // console.log(userProject);
 
-  res.status(StatusCodes.OK).json(project);
+  res.status(StatusCodes.OK).json({
+    projectId: project._id,
+    projectName: project.name,
+    description: project.description,
+    isDone: project.isDone,
+    status: project.status,
+    dueDate: project.dueDate,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  });
 };
 
 const deleteProject = async (req, res) => {
@@ -146,7 +176,16 @@ const updateProject = async (req, res) => {
     throw new NotFoundError(`No project with id ${projectId}`);
   }
 
-  res.status(StatusCodes.OK).json(updatedProject);
+  res.status(StatusCodes.OK).json({
+    projectId: updatedProject._id,
+    projectName: updatedProject.name,
+    description: updatedProject.description,
+    isDone: updatedProject.isDone,
+    status: updatedProject.status,
+    dueDate: updatedProject.dueDate,
+    createdAt: updatedProject.createdAt,
+    updatedAt: updatedProject.updatedAt,
+  });
 };
 
 module.exports = {
