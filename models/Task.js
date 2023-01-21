@@ -31,10 +31,12 @@ const TaskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
     },
+    projectId: {
+      type: mongoose.Types.ObjectId,
+    },
   },
   {
     timestamps: true,
   }
 );
-//NOTE - add projectId???
 module.exports = mongoose.model("Task", TaskSchema);
