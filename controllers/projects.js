@@ -1,4 +1,4 @@
-const { Project, UserProject } = require("../models");
+const { Project, UserProject, User } = require("../models");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
@@ -188,10 +188,91 @@ const updateProject = async (req, res) => {
   });
 };
 
+const getProjectAssignees = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const projectId = req.params.id;
+
+  let userProjects = await UserProject.find({
+    projectId,
+  }).populate("userId", null, User);
+
+  if (userProjects.length == 0) {
+    throw new NotFoundError(`No projects with id ${projectId}`);
+  }
+
+  const assigneesList = userProjects.map((userProject) => {
+    return {
+      projectId: userProject.projectId,
+      isOwner: userProject.isOwner,
+      userId: userProject.userId._id,
+      email: userProject.userId.email,
+      name: userProject.userId.name,
+      role: userProject.userId.role,
+      team: userProject.userId.team,
+    };
+  });
+
+  res.status(StatusCodes.OK).json(assigneesList);
+};
+
+const assignUserToProject = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const projectId = req.params.id;
+  const { newMemberEmail } = req.body;
+
+  const newMember = await User.findOne({ email: newMemberEmail });
+
+  if (!newMember) {
+    throw new NotFoundError(`No User with email ${newMemberEmail} was found`);
+  }
+
+  const userProjects = await UserProject.find({ projectId }).populate(
+    "userId",
+    null,
+    User
+  );
+
+  if (userProjects.length == 0) {
+    throw new NotFoundError(`No projects with id ${projectId}`);
+  }
+
+  if (
+    userProjects.find((userProject) => userProject.userId.equals(newMember._id))
+  ) {
+    throw new BadRequestError(
+      `User with email ${newMemberEmail} is already assigned to Project ${projectId}`
+    );
+  }
+
+  const userProject = await UserProject.create({
+    userId: newMember._id,
+    projectId,
+    isOwner: false,
+  });
+
+  const result = await UserProject.findById(userProject._id).populate(
+    "userId",
+    null,
+    User
+  );
+
+  res.status(StatusCodes.OK).json({
+    projectId: result.projectId,
+    isOwner: result.isOwner,
+    userId: result.userId._id,
+    email: result.userId.email,
+    name: result.userId.name,
+    role: result.userId.role,
+    team: result.userId.team,
+  });
+};
+
 module.exports = {
   getAllProjects,
   getProject,
   createProject,
   deleteProject,
   updateProject,
+  getProjectAssignees,
+  assignUserToProject,
 };
