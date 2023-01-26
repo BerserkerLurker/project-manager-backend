@@ -19,7 +19,14 @@ const register = async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     })
     .json({
-      user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+      user: {
+        userId: user._id,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        role: user.role,
+        team: user.team,
+      },
       accessToken,
     });
 };
@@ -54,7 +61,14 @@ const login = async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     })
     .json({
-      user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+      user: {
+        userId: user._id,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        role: user.role,
+        team: user.team,
+      },
       accessToken,
     });
 };
@@ -92,20 +106,29 @@ const logout = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const { email, name } = req.body;
-  if (!validateEmail(email) || !name.trim()) {
+  const { email, name, password, role, team } = req.body;
+  if (!validateEmail(email) || !name.trim() || !password.trim()) {
     throw new BadRequestError("Invalid values.");
   }
 
   const user = await User.findOne({ _id: req.user.userId });
   user.email = email;
   user.name = name;
+  user.password = password;
+  user.role = role;
+  user.team = team;
   await user.save();
 
   const accessToken = user.createJWT();
-  console.log(user);
   res.status(StatusCodes.OK).send({
-    user: { email: user.email, name: user.name, isAdmin: user.isAdmin },
+    user: {
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+      role: user.role,
+      team: user.team,
+    },
     accessToken,
   });
 };
