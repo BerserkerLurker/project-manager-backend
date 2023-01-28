@@ -41,6 +41,10 @@ const createTeam = async (req, res) => {
 
   const team = await Team.create({ name });
   team.members.push({ memberId: userId, status: "accepted" });
+  team.populate({
+    path: "members.memberId",
+    select: "-password",
+  });
   await team.save();
 
   res.status(StatusCodes.OK).json(team);
