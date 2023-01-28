@@ -141,4 +141,30 @@ const deleteUser = async (req, res) => {
   res.status(StatusCodes.OK).send("Delete user");
 };
 
-module.exports = { register, login, refresh, logout, updateUser, deleteUser };
+const checkEmail = async (req, res) => {
+  const { userId } = req.user;
+  const { email } = req.body;
+
+  if (!validateEmail(email)) {
+    throw new BadRequestError("Invalid email.");
+  }
+
+  const user = await User.findOne({ email });
+  console.log(user);
+
+  if (!user) {
+    return res.status(StatusCodes.OK).json({ email: email, exists: false });
+  } else {
+    return res.status(StatusCodes.OK).json({ email: email, exists: true });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  refresh,
+  logout,
+  updateUser,
+  deleteUser,
+  checkEmail,
+};

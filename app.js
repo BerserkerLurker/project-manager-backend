@@ -43,7 +43,11 @@ const auth = require("./middleware/authentication");
 app.use(
   "/api/v1/auth",
   function (req, res, next) {
-    if (req.method === "PATCH" || req.method === "DELETE") {
+    if (
+      req.method === "PATCH" ||
+      req.method === "DELETE" ||
+      req.path === "/checkemail"
+    ) {
       auth(req, res, next);
     } else {
       next();
