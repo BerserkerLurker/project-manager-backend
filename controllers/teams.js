@@ -77,6 +77,7 @@ const updateTeam = async (req, res) => {
     throw new NotFoundError(`No team with id: ${teamId}`);
   }
 
+  // TODO - Remove this seperate concerns
   if (memberStatus === undefined) {
     // update team name
     updatedTeam.name = name;
@@ -145,6 +146,94 @@ const addTeamMember = async (req, res) => {
   res.status(StatusCodes.OK).json(team);
 };
 
+const removeTeamMember = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const teamId = req.params.id;
+  const { removedUserId } = req.body;
+
+  // TODO - Need to decide whether or not teammate have right to kick out of team otherwise need to check matching userIds or isAdmin privilege
+
+  const toBeRemoved = await User.findById({ _id: removedUserId }).select(
+    "-password"
+  );
+
+  if (!toBeRemoved) {
+    throw new NotFoundError(`No User with id ${removedUserId} was found`);
+  }
+
+  const team = await Team.findById({ _id: teamId }).populate({
+    path: "members.memberId",
+    select: "-password",
+  });
+
+  if (!team) {
+    throw new NotFoundError(`No Team with id ${teamId} was found`);
+  }
+
+  const foundIndex = team.members.findIndex((member) =>
+    member.memberId._id.equals(removedUserId)
+  );
+
+  if (foundIndex === -1) {
+    throw new BadRequestError(
+      `User with id ${removedUserId} is not a member of this team`
+    );
+  } else {
+    // TODO - Notify them
+    // const found = team.members[foundIndex];
+  }
+
+  // TODO - Empty teams need to be deleted ???
+  team.members.splice(foundIndex, 1);
+  await team.save();
+
+  res.status(StatusCodes.OK).json(team);
+};
+
+const updateTeamMember = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const teamId = req.params.id;
+  const { updatedUserId, newStatus } = req.body;
+
+  // TODO - Need to decide whether or not teammate have right to revoke invitation to team otherwise need to check matching userIds or isAdmin privilege
+
+  const toBeUpdated = await User.findById({ _id: updatedUserId }).select(
+    "-password"
+  );
+
+  if (!toBeUpdated) {
+    throw new NotFoundError(`No User with id ${updatedUserId} was found`);
+  }
+
+  const team = await Team.findById({ _id: teamId }).populate({
+    path: "members.memberId",
+    select: "-password",
+  });
+
+  if (!team) {
+    throw new NotFoundError(`No Team with id ${teamId} was found`);
+  }
+
+  const foundIndex = team.members.findIndex((member) =>
+    member.memberId._id.equals(updatedUserId)
+  );
+
+  if (foundIndex === -1) {
+    throw new BadRequestError(
+      `User with id ${updatedUserId} is not a member of this team`
+    );
+  } else {
+    // TODO - Notify them
+    const found = team.members[foundIndex];
+  }
+
+  // TODO - notMember status -> delete member??? careful with last member delete team
+  team.members[foundIndex].status = newStatus;
+  await team.save();
+
+  res.status(StatusCodes.OK).json(team);
+};
+
 module.exports = {
   getAllTeams,
   getTeam,
@@ -152,4 +241,6 @@ module.exports = {
   deleteTeam,
   updateTeam,
   addTeamMember,
+  removeTeamMember,
+  updateTeamMember,
 };
