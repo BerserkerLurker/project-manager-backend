@@ -126,13 +126,13 @@ const deleteProject = async (req, res) => {
     projectId,
     isOwner: true,
   });
-  console.log(userProject);
+  // console.log(userProject);
 
   if (!userProject) {
     throw new NotFoundError(`No owned projects with id ${projectId}`);
   }
   const project = await Project.findByIdAndRemove(projectId);
-  console.log(project);
+  // console.log(project);
 
   if (!project) {
     throw new NotFoundError(`No projects with id ${projectId}`);

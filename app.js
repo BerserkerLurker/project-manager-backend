@@ -1,3 +1,4 @@
+require("console-stamp")(console);
 const dotenv = require("dotenv").config();
 require("dotenv-expand").expand(dotenv);
 const express = require("express");

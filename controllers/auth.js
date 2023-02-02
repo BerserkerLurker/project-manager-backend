@@ -135,7 +135,7 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   const { userId, isAdmin } = req.user;
-  console.log(userId, isAdmin);
+  // console.log(userId, isAdmin);
 
   const deletedUser = User.findByIdAndRemove(userId);
   res.status(StatusCodes.OK).send("Delete user");
@@ -150,7 +150,7 @@ const checkEmail = async (req, res) => {
   }
 
   const user = await User.findOne({ email });
-  console.log(user);
+  // console.log(user);
 
   if (!user) {
     return res.status(StatusCodes.OK).json({ email: email, exists: false });
