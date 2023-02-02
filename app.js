@@ -7,6 +7,9 @@ const cookieparser = require("cookie-parser");
 require("express-async-errors");
 const morgan = require("morgan");
 const connectDB = require("./db/connect");
+const socketio = require("socket.io");
+const { socketOps } = require("./socket/socketOps");
+const { wrapAuth } = require("./socket/middleware/wrapper");
 
 // morgan
 const app = express();
@@ -92,9 +95,20 @@ const port = process.env.PORT || 5000;
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
-    app.listen(port, () =>
+    const server = app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
+    global.io = socketio(server, {
+      cors: {
+        origin: "http://localhost:5173",
+        credentials: true,
+      },
+      path: "/chat/",
+    });
+
+    global.io.use(wrapAuth(auth));
+
+    socketOps();
   } catch (error) {
     console.log(error);
   }
