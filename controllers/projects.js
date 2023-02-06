@@ -209,6 +209,7 @@ const getProjectAssignees = async (req, res) => {
       name: userProject.userId.name,
       role: userProject.userId.role,
       team: userProject.userId.team,
+      avatar: userProject.userId.avatar,
     };
   });
 
@@ -264,6 +265,7 @@ const assignUserToProject = async (req, res) => {
     name: result.userId.name,
     role: result.userId.role,
     team: result.userId.team,
+    avatar: result.userId.avatar,
   });
 };
 
