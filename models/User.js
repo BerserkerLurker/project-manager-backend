@@ -33,14 +33,25 @@ const UserSchema = new mongoose.Schema(
       ref: "Role",
     },
     team: {
+      //TODO - this needs to be an array (updated from Team)
       type: mongoose.Types.ObjectId,
       ref: "Team",
+    },
+    avatar: {
+      type: String,
+      default: "https://api.dicebear.com/5.x/bottts/svg?seed=1",
     },
   },
   {
     timestamps: true,
   }
 );
+
+UserSchema.path("avatar").validate((val) => {
+  urlRegex =
+    /(ftp?:\/\/|http?:\/\/|https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/;
+  return urlRegex.test(val);
+}, "Invalid avatar URL");
 
 UserSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
