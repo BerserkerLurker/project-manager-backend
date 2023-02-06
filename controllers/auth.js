@@ -108,7 +108,7 @@ const logout = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const { email, name, password, role, team } = req.body;
+  const { email, name, password, role, team, avatar } = req.body;
   if (!validateEmail(email) || !name.trim() || !password.trim()) {
     throw new BadRequestError("Invalid values.");
   }
@@ -119,6 +119,7 @@ const updateUser = async (req, res) => {
   user.password = password;
   user.role = role;
   user.team = team;
+  user.avatar = avatar;
   await user.save();
 
   const accessToken = user.createJWT();
