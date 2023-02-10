@@ -1,4 +1,4 @@
-const { Task, UserTask, Project } = require("../models");
+const { Task, UserTask, Project, User, UserProject } = require("../models");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
@@ -176,4 +176,74 @@ const updateTask = async (req, res) => {
   });
 };
 
-module.exports = { getAllTasks, getTask, createTask, deleteTask, updateTask };
+const assignUserToTask = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const taskId = req.params.id;
+  const { assigneeEmail } = req.body;
+
+  const assignee = await User.findOne({ email: assigneeEmail });
+
+  if (!assignee) {
+    throw new NotFoundError(`No User with email ${assigneeEmail} was found`);
+  }
+
+  const userTasks = await UserTask.find({ taskId }).populate([
+    "userId",
+    "taskId",
+  ]);
+
+  if (userTasks.length == 0) {
+    throw new NotFoundError(`No tasks with id ${taskId}`);
+  }
+
+  if (userTasks.find((userTask) => userTask.userId.equals(assignee._id))) {
+    throw new BadRequestError(
+      `User with email ${assigneeEmail} is already assigned to Task ${taskId}`
+    );
+  }
+
+  const refTask = userTasks.find((task) => task.isOwner);
+
+  const userProjects = await UserProject.find({
+    projectId: refTask.taskId.projectId,
+    userId: assignee._id,
+  });
+
+  if (userProjects.length == 0) {
+    throw new BadRequestError(
+      `User with email ${assigneeEmail} is not a member of task's ${taskId} parent project ${refTask.taskId.projectId}`
+    );
+  }
+
+  const userTask = await UserTask.create({
+    userId: assignee._id,
+    taskId,
+    isOwner: false,
+  });
+
+  const result = await UserTask.findById(userTask._id).populate(
+    "userId",
+    null,
+    User
+  );
+
+  res.status(StatusCodes.OK).json({
+    taskID: result.taskId,
+    isOwner: result.isOwner,
+    userId: result.userId._id,
+    email: result.userId.email,
+    name: result.userId.name,
+    role: result.userId.role,
+    team: result.userId.team,
+    avatar: result.userId.avatar,
+  });
+};
+
+module.exports = {
+  getAllTasks,
+  getTask,
+  createTask,
+  deleteTask,
+  updateTask,
+  assignUserToTask,
+};
