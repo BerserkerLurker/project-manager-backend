@@ -14,7 +14,7 @@ const getAllTasks = async (req, res) => {
 
   let userTasks = await UserTask.find({
     userId,
-    isOwner: true,
+    //isOwner: true,
   }).populate("taskId", null, Task);
 
   userTasks = userTasks.map((userTask) => {

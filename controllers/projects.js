@@ -26,7 +26,7 @@ const getAllProjects = async (req, res) => {
 
   let userProjects = await UserProject.find({
     userId: userId,
-    isOwner: true,
+    // isOwner: true,
   }).populate("projectId", null, Project);
 
   if (userProjects.length == 0) {
