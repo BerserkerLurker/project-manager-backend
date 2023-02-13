@@ -282,11 +282,11 @@ const unassignUserFromProject = async (req, res) => {
 
   let member = undefined;
 
-  if (memberUserId !== "") {
+  if (memberUserId !== "" && memberUserId !== undefined) {
     member = await User.findById({
       _id: memberUserId,
     });
-  } else if (memberEmail !== "") {
+  } else if (memberEmail !== "" && memberEmail !== undefined) {
     member = await User.findOne({
       email: memberEmail,
     });
