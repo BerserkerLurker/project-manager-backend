@@ -371,7 +371,7 @@ const unassignUserFromProject = async (req, res) => {
   });
 
   res.status(StatusCodes.OK).json({
-    msg: `User ${member._id} not longer a member of Project ${projectId}`,
+    msg: `User ${member._id} no longer a member of Project ${projectId}`,
   });
 };
 
