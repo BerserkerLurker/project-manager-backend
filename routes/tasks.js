@@ -7,6 +7,7 @@ const {
   deleteTask,
   updateTask,
   assignUserToTask,
+  getTaskAssignees,
 } = require("../controllers/tasks");
 
 router.route("/").post(createTask).get(getAllTasks);
@@ -16,5 +17,6 @@ router
   .post(assignUserToTask)
   .delete(deleteTask)
   .patch(updateTask);
+router.route("/assignees/:id").get(getTaskAssignees);
 
 module.exports = router;

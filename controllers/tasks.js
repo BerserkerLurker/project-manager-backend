@@ -50,6 +50,37 @@ const getTask = async (req, res) => {
   res.status(StatusCodes.OK).json(task);
 };
 
+const getTaskAssignees = async (req, res) => {
+  const taskId = req.params.id;
+  const ids = taskId.split(",");
+  let tasksAssignees = ids.map((id) => {
+    return { [id]: [] };
+  });
+
+  const userTasks = await UserTask.find({
+    taskId: { $in: ids },
+  }).populate([{ path: "userId", select: ["-password", "-__v"] }]);
+
+  if (!userTasks.length) {
+    throw new NotFoundError(`No tasks with ids: ${ids.toString()}`);
+  }
+
+  userTasks.forEach((task) => {
+    let index = tasksAssignees.findIndex((elem) => {
+      return Object.keys(elem)[0] === task.taskId.toString();
+    });
+    if (index !== -1) {
+      const obj = tasksAssignees[index];
+      tasksAssignees[index][task.taskId].push({
+        isOwner: task.isOwner,
+        ...task.userId._doc,
+      });
+    }
+  });
+
+  res.status(StatusCodes.OK).json(tasksAssignees);
+};
+
 const createTask = async (req, res) => {
   const { userId, isAdmin } = req.user;
   const { name, description, isDone, status, priority, dueDate, projectId } =
@@ -246,4 +277,5 @@ module.exports = {
   deleteTask,
   updateTask,
   assignUserToTask,
+  getTaskAssignees,
 };
