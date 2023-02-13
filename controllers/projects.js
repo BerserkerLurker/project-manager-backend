@@ -1,4 +1,4 @@
-const { Project, UserProject, User } = require("../models");
+const { Project, UserProject, User, UserTask, Task } = require("../models");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
@@ -269,6 +269,112 @@ const assignUserToProject = async (req, res) => {
   });
 };
 
+const unassignUserFromProject = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const projectId = req.params.id;
+  const { memberUserId, memberEmail } = req.body;
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new NotFoundError(`No Project with id ${projectId}`);
+  }
+
+  let member = undefined;
+
+  if (memberUserId !== "") {
+    member = await User.findById({
+      _id: memberUserId,
+    });
+  } else if (memberEmail !== "") {
+    member = await User.findOne({
+      email: memberEmail,
+    });
+  }
+
+  if (!member) {
+    if (memberUserId !== "") {
+      throw new NotFoundError(`No User with id ${memberUserId} was found`);
+    } else if (memberEmail !== "") {
+      throw new NotFoundError(`No User with email ${memberEmail} was found`);
+    }
+    throw new BadRequestError(`Must provide an Email or a UserId`);
+  }
+
+  let userProject = await UserProject.findOne({
+    projectId: projectId,
+    userId: userId,
+  });
+
+  if (!userProject.isOwner) {
+    throw new BadRequestError(`Only project owners can unassign member`);
+  }
+
+  userProject = await UserProject.findOne({
+    projectId,
+    userId: member._id,
+  });
+
+  if (!userProject) {
+    throw new NotFoundError(
+      `User ${member._id} is not a member of project ${projectId}`
+    );
+  }
+
+  const userTasks = await Task.find({
+    projectId,
+  }).populate({
+    path: "userTasks",
+    match: {
+      userId: member._id,
+    },
+  });
+
+  let memberTasks = [];
+  userTasks.forEach((elem) => {
+    if (elem.userTasks.length !== 0) {
+      // Collect tasks assigned to this user
+      memberTasks.push(elem.userTasks);
+    }
+  });
+  memberTasks = memberTasks.flat();
+  // console.log(memberTasks);
+
+  // iterate memberTasks
+  // if he isOwner update userTask _id with new userId of Project Owner
+  // if he !isOwner check if taskId owner exists if true delete userTask _id entry else update userId to be project owner id and isOwner to true
+
+  memberTasks.forEach(async (task) => {
+    if (task.isOwner) {
+      const userTask = await UserTask.findOneAndUpdate(
+        { _id: task._id },
+        { userId: userId }
+      );
+    } else {
+      const taskOwner = await UserTask.findOne({
+        taskId: task.taskId,
+        isOwner: true,
+      });
+      if (taskOwner) {
+        const userTask = await UserTask.findOneAndDelete({ _id: task._id });
+      } else {
+        const userTask = await UserTask.findOneAndUpdate(
+          { _id: task._id },
+          { userId: userId, isOwner: true }
+        );
+      }
+    }
+  });
+
+  const unassigned = await UserProject.findOneAndDelete({
+    _id: userProject._id,
+  });
+
+  res.status(StatusCodes.OK).json({
+    msg: `User ${member._id} not longer a member of Project ${projectId}`,
+  });
+};
+
 module.exports = {
   getAllProjects,
   getProject,
@@ -277,4 +383,5 @@ module.exports = {
   updateProject,
   getProjectAssignees,
   assignUserToProject,
+  unassignUserFromProject,
 };

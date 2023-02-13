@@ -37,6 +37,14 @@ const TaskSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+// Virtual populate
+TaskSchema.virtual("userTasks", {
+  ref: "UserTask",
+  foreignField: "taskId",
+  localField: "_id",
+});
 module.exports = mongoose.model("Task", TaskSchema);
