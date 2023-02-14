@@ -137,22 +137,45 @@ const deleteTask = async (req, res) => {
 
   //TODO - Delete tasks as admin and clean up
 
-  const userTask = await UserTask.findOneAndRemove({
-    userId,
-    taskId,
-    isOwner: true,
-  });
-
-  if (!userTask) {
-    throw new NotFoundError(`No owned tasks with id ${taskId}`);
-  }
-  const task = await Task.findByIdAndRemove(taskId);
+  const task = await Task.findById(taskId).populate("userTasks");
 
   if (!task) {
-    throw new NotFoundError(`No tasks with id ${taskId}`);
+    throw new NotFoundError(`No task with id ${taskId} was found`);
   }
 
-  res.status(StatusCodes.OK).send("Delete Task");
+  const query = Task.findByIdAndDelete(taskId);
+  let deleted = undefined;
+
+  if (task.userTasks.length === 0) {
+    deleted = await query.exec();
+  } else {
+    const owner = task.userTasks.filter((userTask) => userTask.isOwner)[0];
+
+    if (!owner) {
+      throw new BadRequestError(`This task has no owner something went wrong`);
+    }
+
+    if (!owner.userId.equals(userId)) {
+      throw new BadRequestError(`Only task owners can delete tasks`);
+    }
+
+    if (task.userTasks.length === 1) {
+      // delete
+      console.log(task.userTasks[0]._id);
+      const delUserTask = await UserTask.findByIdAndDelete(
+        task.userTasks[0]._id
+      );
+      deleted = await query.exec();
+    } else {
+      // delete and clean
+      await task.userTasks.forEach(async (userTask) => {
+        const delUserTask = await UserTask.findByIdAndDelete(userTask._id);
+      });
+      deleted = await query.exec();
+    }
+  }
+
+  res.status(StatusCodes.OK).json(deleted);
 };
 
 const updateTask = async (req, res) => {
