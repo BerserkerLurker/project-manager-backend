@@ -235,6 +235,12 @@ const assignUserToTask = async (req, res) => {
 
   const refTask = userTasks.find((task) => task.isOwner);
 
+  if (!refTask) {
+    throw new BadRequestError(
+      `Task ${taskId} has no owner, something went wrong`
+    );
+  }
+
   const userProjects = await UserProject.find({
     projectId: refTask.taskId.projectId,
     userId: assignee._id,
@@ -259,7 +265,7 @@ const assignUserToTask = async (req, res) => {
   );
 
   res.status(StatusCodes.OK).json({
-    taskID: result.taskId,
+    taskId: result.taskId,
     isOwner: result.isOwner,
     userId: result.userId._id,
     email: result.userId.email,
@@ -267,6 +273,48 @@ const assignUserToTask = async (req, res) => {
     role: result.userId.role,
     team: result.userId.team,
     avatar: result.userId.avatar,
+  });
+};
+
+const unassignUserFromTask = async (req, res) => {
+  const { userId, isAdmin } = req.user;
+  const taskId = req.params.id;
+  const { assigneeEmail } = req.body;
+
+  const assignee = await User.findOne({ email: assigneeEmail });
+
+  if (!assignee) {
+    throw new NotFoundError(`No User with email ${assigneeEmail} was found`);
+  }
+
+  const userTask = await UserTask.findOne({
+    taskId,
+    userId: assignee._id,
+  }).populate(["userId", "taskId"]);
+
+  if (!userTask) {
+    throw new NotFoundError(
+      `No tasks with id ${taskId} is assigned to User ${assignee._id}`
+    );
+  }
+
+  const ownerTask = await UserTask.findOne({
+    taskId,
+    userId: { $ne: assignee._id },
+    isOwner: true,
+  });
+  console.log(ownerTask);
+
+  if (!ownerTask && userTask.isOwner) {
+    throw new BadRequestError(
+      `Unassigning this User will leave the task without an owner, transfer ownership and try again`
+    );
+  }
+
+  const unassigned = await UserTask.findOneAndDelete({ _id: userTask._id });
+
+  res.status(StatusCodes.OK).json({
+    msg: `User ${assignee._id} no longer assigned to task ${taskId}`,
   });
 };
 
@@ -278,4 +326,5 @@ module.exports = {
   updateTask,
   assignUserToTask,
   getTaskAssignees,
+  unassignUserFromTask,
 };
