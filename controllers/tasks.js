@@ -27,6 +27,7 @@ const getAllTasks = async (req, res) => {
       projectId: taskId.projectId,
       description: taskId.description,
       isDone: taskId.isDone,
+      started: taskId.started,
       status: taskId.status,
       priority: taskId.priority,
       dueDate: taskId.dueDate,
@@ -83,8 +84,16 @@ const getTaskAssignees = async (req, res) => {
 
 const createTask = async (req, res) => {
   const { userId, isAdmin } = req.user;
-  const { name, description, isDone, status, priority, dueDate, projectId } =
-    req.body;
+  const {
+    name,
+    description,
+    isDone,
+    started,
+    status,
+    priority,
+    dueDate,
+    projectId,
+  } = req.body;
 
   if (name === "") {
     throw new BadRequestError("Task name cannot be empty.");
@@ -103,6 +112,7 @@ const createTask = async (req, res) => {
     name,
     description,
     isDone,
+    started,
     status,
     priority,
     dueDate,
@@ -123,6 +133,7 @@ const createTask = async (req, res) => {
     taskName: task.name,
     description: task.description,
     isDone: task.isDone,
+    started: task.started,
     status: task.status,
     priority: task.priority,
     dueDate: task.dueDate,
@@ -181,8 +192,16 @@ const deleteTask = async (req, res) => {
 const updateTask = async (req, res) => {
   const { userId, isAdmin } = req.user;
   const taskId = req.params.id;
-  const { name, description, isDone, status, priority, dueDate, projectId } =
-    req.body;
+  const {
+    name,
+    description,
+    isDone,
+    started,
+    status,
+    priority,
+    dueDate,
+    projectId,
+  } = req.body;
 
   //TODO - Can update any task Careful with the clean up
 
@@ -202,6 +221,7 @@ const updateTask = async (req, res) => {
       name,
       description,
       isDone,
+      started,
       status,
       priority,
       dueDate,
@@ -222,6 +242,7 @@ const updateTask = async (req, res) => {
     taskName: updatedTask.name,
     description: updatedTask.description,
     isDone: updatedTask.isDone,
+    started: updatedTask.started,
     status: updatedTask.status,
     priority: updatedTask.priority,
     dueDate: updatedTask.dueDate,

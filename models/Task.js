@@ -14,6 +14,10 @@ const TaskSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    started: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: {
