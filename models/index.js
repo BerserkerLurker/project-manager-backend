@@ -5,5 +5,17 @@ const Project = require("./Project");
 const Task = require("./Task");
 const UserProject = require("./UserProject");
 const UserTask = require("./UserTask");
+const ChatRoom = require("./ChatRoom");
+const ChatMessage = require("./ChatMessage");
 
-module.exports = { User, Role, Team, Project, Task, UserProject, UserTask };
+module.exports = {
+  User,
+  Role,
+  Team,
+  Project,
+  Task,
+  UserProject,
+  UserTask,
+  ChatRoom,
+  ChatMessage,
+};
