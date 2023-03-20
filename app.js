@@ -28,6 +28,7 @@ const projectsRouter = require("./routes/projects");
 const rolesRouter = require("./routes/roles");
 const teamsRouter = require("./routes/teams");
 const tasksRouter = require("./routes/tasks");
+const chatRouter = require("./routes/chat");
 
 // not found
 const notFoundMiddleware = require("./middleware/notFound");
@@ -71,6 +72,9 @@ app.use("/api/v1/teams", auth, teamsRouter);
 
 // Tasks
 app.use("/api/v1/tasks", auth, tasksRouter);
+
+// Chat
+app.use("/api/v1/chat",auth, chatRouter);
 
 // test
 let stringify = require("json-stringify-safe");
