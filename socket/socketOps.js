@@ -12,6 +12,11 @@ function socketOps() {
     // console.log(users);
     global.io.emit("users", users);
 
+    socket.on("userslist", (senderList, callback) => {
+
+      callback(users);
+    });
+
     // logout event
     socket.on("end", () => {
       socket.disconnect();
@@ -25,27 +30,51 @@ function socketOps() {
       global.io.emit("users", users);
     });
 
-    socket.on("chat", (msg, callback) => {
-      console.log("message: " + msg);
-      callback({ msg: `got it! ${new Date()}` });
+    socket.on("chat", (payload, callback) => {
+      const { msg, roomId } = payload;
+      console.log(msg, roomId);
+      if (roomId === "all") {
+        socket.broadcast.emit("all", { msg, roomId });
+        // setTimeout(() => {
+        //   callback({ msg: `got it! ` });
+        // }, 1000);
+      } else {
+        socket.to(roomId).emit(roomId, { msg, roomId });
+      }
     });
 
     // subscribe to a chat room
     socket.on("subscribe", (room, otherUserId) => {
       const userSockets = users.filter((user) => user.userId === otherUserId);
-      userSockets.map((userInfo) => {
-        console.log(global.io.of("/").sockets.keys());
-        console.log(global.io.of("/").sockets.get(userInfo.clientId).connected);
-        const socketConn = global.io.of("/").sockets.get(userInfo.clientId);
-        // const socketConn = global.io.sockets.connected(userInfo.clientId);
-        if (socketConn.connected) {
-          socketConn.join(room);
-          console.log(global.io.of("/").adapter.rooms);
-        }
-      });
+      // console.log(global.io.of("/").adapter.rooms.get(room), userSockets[0].clientId);
+
       socket.join(room);
-      global.io.to(room).emit(`Welcome to ${room} ${userInfo.userName}`);
-      // console.log(global.io.of("/").adapter.rooms);
+      if (userSockets.length === 0) {
+        global.io.to(room).emit(`${otherUserId} is offline`);
+      } else if (
+        global.io.of("/").adapter.rooms.get(room)?.has(userSockets[0].clientId)
+      ) {
+        console.log(global.io.of("/").adapter.rooms);
+        return;
+      } else {
+        userSockets.map((userNfo) => {
+          // console.log(global.io.of("/").sockets.keys());
+          // console.log(global.io.of("/").sockets.get(userInfo.clientId).connected);
+          const socketConn = global.io.of("/").sockets.get(userNfo.clientId);
+          // const socketConn = global.io.sockets.connected(userInfo.clientId);
+
+          if (socketConn.connected) {
+            socketConn.join(room);
+            // console.log(global.io.of("/").adapter.rooms);
+          }
+        });
+      }
+      console.log(global.io.of("/").adapter.rooms);
+
+      socket.to(room).emit("joined", {
+        roomId: room,
+        msg: `Welcome to ${room} ${userInfo.userName} `,
+      });
     });
 
     // mute a chat room
