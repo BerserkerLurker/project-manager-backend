@@ -187,11 +187,19 @@ const removeTeamMember = async (req, res) => {
     // const found = team.members[foundIndex];
   }
 
-  // TODO - Empty teams need to be deleted ???
   team.members.splice(foundIndex, 1);
   await team.save();
 
   res.status(StatusCodes.OK).json(team);
+
+  // Cleanup
+  if (team.members.length === 0) {
+    const team = await Team.findByIdAndRemove(teamId);
+
+    if (!team) {
+      throw new NotFoundError(`No team with id: ${teamId}`);
+    }
+  }
 };
 
 const updateTeamMember = async (req, res) => {
