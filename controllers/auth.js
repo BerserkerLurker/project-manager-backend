@@ -3,11 +3,22 @@ const { BadRequestError, UnauthenticatedError } = require("../errors");
 const { User } = require("../models");
 const validateEmail = require("../utils/validate");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const MailToken = require("../models/MailToken");
+const sendEmail = require("../utils/email");
 
 const register = async (req, res) => {
   const user = await User.create({ ...req.body });
   const accessToken = user.createJWT();
   const refreshToken = user.createRefreshToken();
+
+  let mailToken = await new MailToken({
+    userId: user._id,
+    token: crypto.randomBytes(32).toString("hex"),
+  }).save();
+
+  const message = `${process.env.BASE_URL}/auth/verify/${user._id}/${mailToken.token}`;
+  await sendEmail(user.email, "Verify Email", message);
 
   res
     .status(StatusCodes.CREATED)
@@ -27,8 +38,10 @@ const register = async (req, res) => {
         avatar: user.avatar,
         role: user.role,
         team: user.team,
+        verified: false,
       },
       accessToken,
+      msg: "An email was sent to your account please verify.",
     });
 };
 
@@ -163,6 +176,32 @@ const checkEmail = async (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  const { userId, token } = req.params;
+
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    throw new BadRequestError("Invalid link");
+  }
+
+  const mailToken = await MailToken.findOne({
+    userId: user._id,
+    token,
+  });
+  if (!mailToken) {
+    throw new BadRequestError("Invalid link");
+  }
+
+  await User.updateOne({ _id: user._id }, { verified: true });
+  await MailToken.findByIdAndRemove(mailToken._id);
+
+  // TODO - handle in front??
+  // res
+  //   .status(StatusCodes.OK)
+  //   .json({ status: "success", msg: "Email verified sucessfully" });
+  res.redirect(StatusCodes.MOVED_PERMANENTLY, process.env.APP_URL);
+};
+
 module.exports = {
   register,
   login,
@@ -171,4 +210,5 @@ module.exports = {
   updateUser,
   deleteUser,
   checkEmail,
+  verifyEmail,
 };
