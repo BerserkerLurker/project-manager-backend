@@ -74,7 +74,7 @@ app.use("/api/v1/teams", auth, teamsRouter);
 app.use("/api/v1/tasks", auth, tasksRouter);
 
 // Chat
-app.use("/api/v1/chat",auth, chatRouter);
+app.use("/api/v1/chat", auth, chatRouter);
 
 // test
 let stringify = require("json-stringify-safe");
