@@ -41,6 +41,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "https://api.dicebear.com/5.x/bottts/svg?seed=1",
     },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
