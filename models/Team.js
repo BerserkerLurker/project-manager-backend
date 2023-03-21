@@ -4,7 +4,7 @@ const TeamSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please provide a name."],
-    unique: true,
+    unique: false,
   },
   members: [
     new mongoose.Schema({
