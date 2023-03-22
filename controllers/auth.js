@@ -17,32 +17,33 @@ const register = async (req, res) => {
     token: crypto.randomBytes(32).toString("hex"),
   }).save();
 
-  const message = `${process.env.BASE_URL}/auth/verify/${user._id}/${mailToken.token}`;
+  const message = `Click this link to verify your email and gain access to your account. ${process.env.APP_URL}/verify/${user._id}/${mailToken.token}`;
   await sendEmail(user.email, "Verify Email", message);
 
   res
     .status(StatusCodes.CREATED)
-    .cookie("jwt", refreshToken, {
-      httpOnly: true,
-      sameSite: "None",
-      secure: true,
-      signed: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    })
+    // .cookie("jwt", refreshToken, {
+    //   httpOnly: true,
+    //   sameSite: "None",
+    //   secure: true,
+    //   signed: true,
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    // })
     .json({
-      user: {
-        userId: user._id,
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin,
-        avatar: user.avatar,
-        role: user.role,
-        team: user.team,
-        verified: false,
-      },
-      accessToken,
-      msg: "An email was sent to your account please verify.",
+      // user: {
+      //   userId: user._id,
+      //   email: user.email,
+      //   name: user.name,
+      //   isAdmin: user.isAdmin,
+      //   avatar: user.avatar,
+      //   role: user.role,
+      //   team: user.team,
+      //   verified: false,
+      // },
+      // accessToken,
+      msg: "A verification link was sent to this email address. Please click the link to access your account.",
     });
+};
 };
 
 const login = async (req, res) => {
@@ -60,6 +61,10 @@ const login = async (req, res) => {
 
   if (!isPasswordCorrect) {
     throw new UnauthenticatedError("Invalid Credentials.");
+  }
+
+  if (!user.verified) {
+    throw new UnauthenticatedError("Email address not verified");
   }
 
   const accessToken = user.createJWT();
@@ -181,7 +186,7 @@ const verifyEmail = async (req, res) => {
 
   const user = await User.findOne({ _id: userId });
   if (!user) {
-    throw new BadRequestError("Invalid link");
+    throw new BadRequestError("Invalid link bad userId");
   }
 
   const mailToken = await MailToken.findOne({
@@ -189,17 +194,35 @@ const verifyEmail = async (req, res) => {
     token,
   });
   if (!mailToken) {
-    throw new BadRequestError("Invalid link");
+    throw new BadRequestError("Invalid link bad token");
   }
 
   await User.updateOne({ _id: user._id }, { verified: true });
   await MailToken.findByIdAndRemove(mailToken._id);
 
-  // TODO - handle in front??
-  // res
-  //   .status(StatusCodes.OK)
-  //   .json({ status: "success", msg: "Email verified sucessfully" });
-  res.redirect(StatusCodes.MOVED_PERMANENTLY, process.env.APP_URL);
+  const accessToken = user.createJWT();
+  const refreshToken = user.createRefreshToken();
+  res
+    .status(StatusCodes.OK)
+    .cookie("jwt", refreshToken, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      signed: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    })
+    .json({
+      user: {
+        userId: user._id,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        avatar: user.avatar,
+        role: user.role,
+        team: user.team,
+      },
+      accessToken,
+    });
 };
 
 module.exports = {
