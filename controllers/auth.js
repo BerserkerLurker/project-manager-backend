@@ -1,5 +1,9 @@
 const { StatusCodes } = require("http-status-codes");
-const { BadRequestError, UnauthenticatedError } = require("../errors");
+const {
+  BadRequestError,
+  UnauthenticatedError,
+  NotFoundError,
+} = require("../errors");
 const { User } = require("../models");
 const validateEmail = require("../utils/validate");
 const jwt = require("jsonwebtoken");
@@ -44,6 +48,34 @@ const register = async (req, res) => {
       msg: "A verification link was sent to this email address. Please click the link to access your account.",
     });
 };
+
+const sendNewVerificationEmail = async (req, res) => {
+  const { email } = req.body;
+
+  // TODO - timeout add timestamps to MailToken
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new NotFoundError(`No user found with email ${email}`);
+  }
+
+  if (user.verified) {
+    throw new BadRequestError(
+      `${email} is already verified. No verification email was sent.`
+    );
+  }
+  let mailToken = await MailToken.findOne({ userId: user._id });
+
+  if (!mailToken) {
+    mailToken = await new MailToken({
+      userId: user._id,
+      token: crypto.randomBytes(32).toString("hex"),
+    }).save();
+  }
+  const message = `Click this link to verify your email and gain access to your account. ${process.env.APP_URL}/verify/${user._id}/${mailToken.token}`;
+  await sendEmail(user.email, "Verify Email", message);
+
+  res.status(StatusCodes.OK).json({ msg: "New verification email sent." });
 };
 
 const login = async (req, res) => {
@@ -234,4 +266,5 @@ module.exports = {
   deleteUser,
   checkEmail,
   verifyEmail,
+  sendNewVerificationEmail,
 };

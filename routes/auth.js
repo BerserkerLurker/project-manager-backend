@@ -10,9 +10,11 @@ const {
   deleteUser,
   checkEmail,
   verifyEmail,
+  sendNewVerificationEmail,
 } = require("../controllers/auth");
 
 router.get("/verify/:userId/:token", verifyEmail);
+router.post("/sendverifyemail", sendNewVerificationEmail);
 router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
