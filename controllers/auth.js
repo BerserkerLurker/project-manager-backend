@@ -78,6 +78,41 @@ const sendNewVerificationEmail = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "New verification email sent." });
 };
 
+const sendForgotPasswordEmail = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new NotFoundError(`No user found with email ${email}`);
+  }
+
+  const message = `Click this link to reset your password. ${process.env.APP_URL}/resetpassword/${user._id} \n If you didn't request this password reset, please ignone this email.`;
+
+  await sendEmail(user.email, "Reset Password", message);
+
+  res.status(StatusCodes.OK).json({ msg: "Reset password email sent" });
+};
+
+const resetPassword = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new BadRequestError(`No user with id ${userId}`);
+  }
+
+  const tempPassword = crypto.randomBytes(16).toString("hex") + "TP";
+  user.password = tempPassword;
+  await user.save();
+
+  const message = `This is your new password: ${tempPassword} \n Please change it as soon as possible in your profile page.`;
+  await sendEmail(user.email, "New Password", message);
+
+  res.status(StatusCodes.OK).json({ msg: "New password email sent" });
+};
+
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -267,4 +302,6 @@ module.exports = {
   checkEmail,
   verifyEmail,
   sendNewVerificationEmail,
+  sendForgotPasswordEmail,
+  resetPassword,
 };
